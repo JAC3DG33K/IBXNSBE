@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CXO Cyber Winter Wonderland - Detroit 2026</title>
+    <script src="three.min.js"></script>
+    <link rel="stylesheet" href="css/fonts.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Rajdhani', 'Bahnschrift', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #020617;
+            color: #f3f4f6;
+            user-select: none;
+        }
+        #webgl-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', 'Bahnschrift', 'Eurostile', 'Segoe UI', Arial, sans-serif;
+        }
+        .cyber-glow {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+        .cyber-box {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+        }
+    </style>
+    <link rel="stylesheet" href="css/tailwind-lite.css">
+</head>
+<body class="w-full h-full relative">
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Game HUD -->
+    <div id="hud" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4 sm:p-6 hidden">
+        <!-- Top Event Info & Stats -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="cyber-box px-4 py-2 rounded-xl border-l-4 border-cyan-400">
+                <div class="text-xs uppercase tracking-widest text-cyan-400 font-orbitron font-bold">CXO Cyber Winter Wonderland</div>
+                <div class="text-xs text-slate-300">Elevate @ One Campus Martius • 1000 Woodward Ave, Detroit</div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex gap-3 pointer-events-auto flex-wrap items-center">
+                <div id="gamepad-badge" class="cyber-box px-3 py-2 rounded-xl text-center flex items-center gap-1.5 hidden border-emerald-500/60">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-xs font-orbitron text-emerald-400 font-bold">GAMEPAD CONNECTED</span>
+                </div>
+                <div class="cyber-box px-4 py-2 rounded-xl text-center border-amber-500/60">
+                    <div class="text-xs text-slate-400 font-orbitron">TIME REMAINING</div>
+                    <div id="hud-timer" class="text-xl font-bold font-orbitron text-amber-400">00:30</div>
+                </div>
+                <div class="cyber-box px-4 py-2 rounded-xl text-center">
+                    <div class="text-xs text-slate-400 font-orbitron">SCORE</div>
+                    <div id="hud-score" class="text-xl font-bold font-orbitron text-cyan-400">0</div>
+                </div>
+                <div class="cyber-box px-4 py-2 rounded-xl text-center">
+                    <div class="text-xs text-slate-400 font-orbitron">SECURITY KEYS</div>
+                    <div id="hud-keys" class="text-xl font-bold font-orbitron text-emerald-400">0 / 5</div>
+                </div>
+                <div class="cyber-box px-4 py-2 rounded-xl text-center">
+                    <div class="text-xs text-slate-400 font-orbitron">SPEED</div>
+                    <div class="flex items-baseline gap-1">
+                        <span id="hud-speed" class="text-xl font-bold font-orbitron text-cyan-300">0</span>
+                        <span class="text-[10px] text-slate-400">MPH</span>
+                    </div>
+                </div>
+                <button id="btn-quit" class="cyber-box px-4 py-2.5 rounded-xl text-center border-rose-500/50 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-orbitron text-xs font-bold transition-all active:scale-95 cursor-pointer">
+                    QUIT (Q)
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Security Tip Banner -->
+        <div id="tip-banner" class="self-center max-w-lg w-full bg-slate-900/95 border border-cyan-500/60 rounded-xl p-3 shadow-lg transform -translate-y-12 transition-all duration-300 opacity-0 text-center pointer-events-none">
+            <div class="text-xs font-bold text-cyan-400 font-orbitron uppercase flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                Cybersecurity Intelligence Broadcast
+            </div>
+            <div id="tip-text" class="text-sm font-semibold text-white mt-1">Always use Multi-Factor Authentication (MFA) across all enterprise endpoints!</div>
+        </div>
+
+        <!-- Bottom Controls & Nitro -->
+        <div class="flex flex-col sm:flex-row justify-between items-end gap-4">
+            <!-- Nitro Meter -->
+            <div class="cyber-box p-3 rounded-xl w-48 sm:w-64">
+                <div class="flex justify-between text-xs font-orbitron mb-1">
+                    <span class="text-cyan-400">PATCH BOOST (NITRO)</span>
+                    <span id="nitro-text" class="text-white">100%</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-cyan-500/30">
+                    <div id="nitro-bar" class="bg-gradient-to-r from-cyan-500 to-teal-400 h-full w-full transition-all duration-100"></div>
+                </div>
+            </div>
+
+            <!-- On-Screen Controls for Touch / Mouse -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <div class="flex gap-1.5">
+                    <button id="btn-left" class="bg-slate-800/90 border border-cyan-500/50 text-cyan-400 px-4 py-3 rounded-xl text-lg font-bold active:bg-cyan-500 active:text-slate-950">◄</button>
+                    <button id="btn-right" class="bg-slate-800/90 border border-cyan-500/50 text-cyan-400 px-4 py-3 rounded-xl text-lg font-bold active:bg-cyan-500 active:text-slate-950">►</button>
+                </div>
+                <div class="flex gap-1.5 ml-2">
+                    <button id="btn-brake" class="bg-rose-950/90 border border-rose-500/50 text-rose-300 px-4 py-3 rounded-xl font-bold font-orbitron text-xs active:bg-rose-600 active:text-white">BRAKE (L2)</button>
+                    <button id="btn-accel" class="bg-cyan-600 border border-cyan-400 text-slate-950 px-5 py-3 rounded-xl font-bold font-orbitron text-xs active:bg-cyan-400">ACCEL (R2)</button>
+                    <button id="btn-nitro" class="bg-teal-500 text-slate-950 px-4 py-3 rounded-xl font-bold font-orbitron text-xs active:bg-teal-400">NITRO (A)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="cyber-box max-w-2xl w-full p-6 sm:p-10 rounded-2xl border border-cyan-500/50 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+            
+            <div class="inline-block px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-orbitron font-bold mb-4 tracking-widest uppercase">
+                Event Challenge Game
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-black font-orbitron text-white tracking-wider mb-2 cyber-glow">
+                CYBER WINTER WONDERLAND
+            </h1>
+            <p class="text-cyan-300 font-orbitron text-sm sm:text-base mb-6 tracking-wide">
+                CXO Third Annual Gala & Snowmobile Challenge • Detroit, MI
+            </p>
+
+            <div class="bg-slate-900/90 rounded-xl p-4 sm:p-6 mb-6 text-left border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <div class="text-slate-400 text-xs font-orbitron">DATE & TIME</div>
+                    <div class="text-white font-semibold flex items-center gap-1.5 mt-0.5">
+                        📅 December 1, 2026
+                    </div>
+                </div>
+                <div>
+                    <div class="text-slate-400 text-xs font-orbitron">LOCATION</div>
+                    <div class="text-white font-semibold flex items-center gap-1.5 mt-0.5">
+                        📍 Elevate @ One Campus Martius, Detroit, MI
+                    </div>
+                </div>
+                <div class="sm:col-span-2 pt-2 border-t border-slate-800/80">
+                    <div class="text-slate-400 text-xs font-orbitron mb-1">MISSION RULES (30 SECONDS)</div>
+                    <div class="text-slate-300 text-xs sm:text-sm">
+                        • Dodge <span class="text-rose-400 font-bold">Aggressive Opponents</span> attempting to block you.<br>
+                        • Collect as many <span class="text-emerald-400 font-bold">Security Keys</span> as possible before time expires!<br>
+                        • At 00:00, you will automatically return here and open the official event website.
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button id="start-btn" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-orbitron font-black text-lg rounded-xl shadow-lg shadow-cyan-500/30 transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+                    START RACE (PRESS A)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer;
+        let playerSledMesh;
+        let opponents = [];
+        let obstacles = [];
+        let collectibles = [];
+        let billboards = [];
+        let snowParticlesGroup = [];
+        
+        let gameActive = false;
+        let score = 0;
+        let keysCollected = 0;
+        const totalKeysNeeded = 5;
+        let speed = 0;
+        const maxSpeed = 1.45;
+        let acceleration = 0.007;
+        let deceleration = 0.009;
+        let nitro = 100;
+        let isNitroActive = false;
+        let playerX = 0;
+        let targetPlayerX = 0;
+        let distanceTraveled = 0;
+        const trackLength = 5000;
+
+        // Timer
+        let timeRemaining = 30;
+        let gameTimerInterval = null;
+
+        // Inputs
+        const keys = { up: false, down: false, left: false, right: false, nitro: false };
+        let touchAccel = false, touchBrake = false, touchLeft = false, touchRight = false, touchNitro = false;
+        let gamepadConnected = false;
+
+        // Audio Synthesizer
+        let audioCtx = null;
+        let engineOsc = null;
+        let engineGain = null;
+
+        const cyberTips = [
+            "Always use Multi-Factor Authentication (MFA) across all enterprise endpoints.",
+            "Beware of Phishing Emails – Verify sender domains carefully.",
+            "Keep software & operating systems patched against Zero-Day vulnerabilities.",
+            "Zero Trust Architecture: Never trust, always verify every user & device.",
+            "Encrypt sensitive corporate data both in transit and at rest.",
+            "Deploy Endpoint Detection & Response (EDR) to neutralize ransomware threats."
+        ];
+        let currentTipIndex = 0;
+        let tipTimer = 0;
+
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                engineOsc = audioCtx.createOscillator();
+                engineOsc.type = 'sawtooth';
+                engineOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+
+                let filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(280, audioCtx.currentTime);
+
+                engineGain = audioCtx.createGain();
+                engineGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+                engineOsc.connect(filter);
+                filter.connect(engineGain);
+                engineGain.connect(audioCtx.destination);
+                engineOsc.start();
+            } catch(e) {
+                console.log("Audio muted", e);
+            }
+        }
+
+        function playSoundEffect(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            let now = audioCtx.currentTime;
+
+            if (type === 'collect') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(1040, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'crash') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(35, now + 0.35);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initThree();
+            setupEventListeners();
+            setupGamepadListeners();
+        });
+
+        function initThree() {
+            const canvas = document.getElementById('webgl-canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020617);
+            scene.fog = new THREE.FogExp2(0x090e1a, 0.012);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3.2, 7.5);
+            camera.rotation.x = -0.25;
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const ambientLight = new THREE.AmbientLight(0x7dd3fc, 1.2);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xbae6fd, 1.8);
+            directionalLight.position.set(15, 35, 20);
+            scene.add(directionalLight);
+
+            const aurora1 = new THREE.PointLight(0x06b6d4, 3.5, 180);
+            aurora1.position.set(-25, 45, -60);
+            scene.add(aurora1);
+
+            const aurora2 = new THREE.PointLight(0x10b981, 2.5, 180);
+            aurora2.position.set(25, 45, -140);
+            scene.add(aurora2);
+
+            createSkyboxAndAurora();
+            createContinuousFallingSnow();
+            buildSnowyTrackAndDetroitCity();
+            
+            playerSledMesh = createSnowmobileModel(0x06b6d4);
+            scene.add(playerSledMesh);
+
+            spawnOpponents();
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function createSkyboxAndAurora() {
+            const auroraGeo = new THREE.PlaneGeometry(380, 100, 32, 16);
+            const auroraMat = new THREE.MeshBasicMaterial({
+                color: 0x10b981,
+                transparent: true,
+                opacity: 0.28,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending
+            });
+            const aurora = new THREE.Mesh(auroraGeo, auroraMat);
+            aurora.position.set(0, 70, -180);
+            scene.add(aurora);
+        }
+
+        function createContinuousFallingSnow() {
+            for (let layer = 0; layer < 2; layer++) {
+                const snowGeo = new THREE.BufferGeometry();
+                const snowCount = 3000;
+                const posArray = new Float32Array(snowCount * 3);
+
+                for(let i = 0; i < snowCount * 3; i += 3) {
+                    posArray[i] = (Math.random() - 0.5) * 180;
+                    posArray[i+1] = Math.random() * 100;
+                    posArray[i+2] = (Math.random() - 0.5) * 400;
+                }
+
+                snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const snowMat = new THREE.PointsMaterial({
+                    size: layer === 0 ? 0.65 : 0.4,
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: layer === 0 ? 0.9 : 0.6
+                });
+
+                const snowSystem = new THREE.Points(snowGeo, snowMat);
+                scene.add(snowSystem);
+                snowParticlesGroup.push(snowSystem);
+            }
+        }
+
+        function buildSnowyTrackAndDetroitCity() {
+            const terrainGeo = new THREE.PlaneGeometry(300, trackLength + 400);
+            const terrainMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9, metalness: 0.1 });
+            const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.position.set(0, -0.05, -trackLength / 2 + 50);
+            scene.add(terrain);
+
+            const roadGeo = new THREE.PlaneGeometry(28, trackLength + 300);
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, metalness: 0.2 });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, 0, -trackLength / 2 + 50);
+            scene.add(road);
+
+            const lineGeo = new THREE.PlaneGeometry(0.8, trackLength + 300);
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+
+            const leftLine = new THREE.Mesh(lineGeo, lineMat);
+            leftLine.rotation.x = -Math.PI / 2;
+            leftLine.position.set(-13.5, 0.03, -trackLength / 2 + 50);
+            scene.add(leftLine);
+
+            const rightLine = new THREE.Mesh(lineGeo, lineMat);
+            rightLine.rotation.x = -Math.PI / 2;
+            rightLine.position.set(13.5, 0.03, -trackLength / 2 + 50);
+            scene.add(rightLine);
+
+            for (let z = -50; z > -trackLength; z -= 45) {
+                createSkyscraper(-19, z + Math.random() * 12);
+                createSkyscraper(19, z + Math.random() * 12);
+
+                if (Math.random() > 0.35) {
+                    const side = Math.random() > 0.5 ? -1 : 1;
+                    createCyberBillboard(side * 15, 9.5, z, side < 0 ? Math.PI/4.5 : -Math.PI/4.5);
+                }
+
+                if (z < -40 && z > -trackLength + 120) {
+                    const laneOffset = (Math.floor(Math.random() * 3) - 1) * 3.2;
+                    if (Math.random() > 0.45) {
+                        const type = Math.random() > 0.5 ? 'ransomware' : 'bug';
+                        spawnObstacle(laneOffset, z, type);
+                    } else {
+                        spawnCollectible(laneOffset, z);
+                    }
+                }
+            }
+        }
+
+        function createSkyscraper(x, z) {
+            const height = 50 + Math.random() * 60;
+            const width = 10 + Math.random() * 8;
+            const depth = 10 + Math.random() * 8;
+
+            const geo = new THREE.BoxGeometry(width, height, depth);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x070c18, roughness: 0.4, metalness: 0.85 });
+            const building = new THREE.Mesh(geo, mat);
+            building.position.set(x, height / 2, z);
+            scene.add(building);
+
+            const capGeo = new THREE.BoxGeometry(width + 0.4, 0.8, depth + 0.4);
+            const capMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
+            const cap = new THREE.Mesh(capGeo, capMat);
+            cap.position.set(x, height + 0.4, z);
+            scene.add(cap);
+
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+            const windowGeo = new THREE.PlaneGeometry(0.7, 1.0);
+            
+            for(let wx = -width/2 + 1.2; wx < width/2; wx += 2.8) {
+                for(let wy = -height/2 + 6; wy < height/2 - 6; wy += 5.5) {
+                    if (Math.random() > 0.35) {
+                        const win = new THREE.Mesh(windowGeo, windowMat);
+                        win.position.set(x + (x < 0 ? width/2 + 0.01 : -width/2 - 0.01), wy, z + wx);
+                        win.rotation.y = x < 0 ? Math.PI/2 : -Math.PI/2;
+                        scene.add(win);
+                    }
+                }
+            }
+        }
+
+        function createCyberBillboard(x, y, z, rotationY) {
+            const group = new THREE.Group();
+            const frameGeo = new THREE.BoxGeometry(7, 4.2, 0.3);
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9 });
+            const frame = new THREE.Mesh(frameGeo, frameMat);
+            group.add(frame);
+
+            const screenGeo = new THREE.PlaneGeometry(6.6, 3.8);
+            const tipText = cyberTips[Math.floor(Math.abs(z / 45)) % cyberTips.length];
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 24px Orbitron, Bahnschrift, "Segoe UI", Arial, sans-serif';
+            ctx.fillText("CXO CYBER TIP", 30, 45);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '22px Rajdhani, Bahnschrift, "Segoe UI", Arial, sans-serif';
+            wrapText(ctx, tipText, 30, 90, 450, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const screenMat = new THREE.MeshBasicMaterial({ map: texture });
+            const screen = new THREE.Mesh(screenGeo, screenMat);
+            screen.position.z = 0.16;
+            group.add(screen);
+
+            group.position.set(x, y, z);
+            group.rotation.y = rotationY;
+            scene.add(group);
+            billboards.push(group);
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+        }
+
+        function createSnowmobileModel(accentColor) {
+            const sledGroup = new THREE.Group();
+
+            const bodyGeo = new THREE.BoxGeometry(1.2, 0.75, 2.8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.6 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.set(0, 0.45, 0);
+            sledGroup.add(body);
+
+            const stripeGeo = new THREE.BoxGeometry(1.22, 0.15, 1.8);
+            const stripeMat = new THREE.MeshBasicMaterial({ color: accentColor });
+            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+            stripe.position.set(0, 0.58, 0.1);
+            sledGroup.add(stripe);
+
+            const noseGeo = new THREE.ConeGeometry(0.75, 1.2, 4);
+            const nose = new THREE.Mesh(noseGeo, bodyMat);
+            nose.rotation.x = Math.PI / 2;
+            nose.position.set(0, 0.42, -1.8);
+            sledGroup.add(nose);
+
+            const skiGeo = new THREE.BoxGeometry(0.22, 0.06, 1.8);
+            const skiMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 });
+            
+            const skiL = new THREE.Mesh(skiGeo, skiMat);
+            skiL.position.set(-0.85, 0.08, -1.1);
+            sledGroup.add(skiL);
+
+            const skiR = new THREE.Mesh(skiGeo, skiMat);
+            skiR.position.set(0.85, 0.08, -1.1);
+            sledGroup.add(skiR);
+
+            const riderGeo = new THREE.CylinderGeometry(0.38, 0.48, 1.1, 16);
+            const riderMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+            const rider = new THREE.Mesh(riderGeo, riderMat);
+            rider.position.set(0, 1.25, 0.2);
+            sledGroup.add(rider);
+
+            const helmetGeo = new THREE.SphereGeometry(0.35, 16, 16);
+            const helmetMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.8 });
+            const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+            helmet.position.set(0, 1.9, 0.2);
+            sledGroup.add(helmet);
+
+            const visorGeo = new THREE.BoxGeometry(0.55, 0.18, 0.35);
+            const visorMat = new THREE.MeshBasicMaterial({ color: accentColor });
+            const visor = new THREE.Mesh(visorGeo, visorMat);
+            visor.position.set(0, 1.95, 0.38);
+            sledGroup.add(visor);
+
+            return sledGroup;
+        }
+
+        function spawnOpponents() {
+            opponents = [];
+            for(let i = 0; i < 4; i++) {
+                const opp = createSnowmobileModel(0xef4444);
+                const laneX = (i - 1.5) * 2.8;
+                const zPos = -80 - i * 140;
+                opp.position.set(laneX, 0, zPos);
+                scene.add(opp);
+                opponents.push({ mesh: opp, x: laneX, z: zPos, speed: 0.65 + Math.random() * 0.2 });
+            }
+        }
+
+        function spawnObstacle(x, z, type) {
+            const group = new THREE.Group();
+            if (type === 'ransomware') {
+                const lockGeo = new THREE.BoxGeometry(1.3, 1.3, 1.3);
+                const lockMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x7f1d1d, metalness: 0.8 });
+                const lock = new THREE.Mesh(lockGeo, lockMat);
+                group.add(lock);
+            } else {
+                const bugGeo = new THREE.OctahedronGeometry(1.1);
+                const bugMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x581c87, wireframe: true });
+                const bug = new THREE.Mesh(bugGeo, bugMat);
+                group.add(bug);
+            }
+            group.position.set(x, 0.65, z);
+            scene.add(group);
+            obstacles.push({ mesh: group, x: x, z: z, type: type });
+        }
+
+        function spawnCollectible(x, z) {
+            const keyGeo = new THREE.DodecahedronGeometry(0.75);
+            const keyMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x047857, metalness: 0.9 });
+            const keyMesh = new THREE.Mesh(keyGeo, keyMat);
+            keyMesh.position.set(x, 0.9, z);
+            scene.add(keyMesh);
+            collectibles.push({ mesh: keyMesh, x: x, z: z, collected: false });
+        }
+
+        function pollGamepad() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let gp = null;
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i]) { gp = gamepads[i]; break; }
+            }
+
+            if (!gp) {
+                if (gamepadConnected) {
+                    gamepadConnected = false;
+                    document.getElementById('gamepad-badge').classList.add('hidden');
+                }
+                return { accel: false, brake: false, left: false, right: false, nitro: false, start: false, quit: false };
+            }
+
+            if (!gamepadConnected) {
+                gamepadConnected = true;
+                document.getElementById('gamepad-badge').classList.remove('hidden');
+            }
+
+            const axisX = gp.axes[0] || 0;
+            const dpadLeft = gp.buttons[14] && gp.buttons[14].pressed;
+            const dpadRight = gp.buttons[15] && gp.buttons[15].pressed;
+
+            const triggerRight = (gp.buttons[7] && gp.buttons[7].value > 0.15) || (gp.buttons[0] && gp.buttons[0].pressed);
+            const triggerLeft = (gp.buttons[6] && gp.buttons[6].value > 0.15) || (gp.buttons[1] && gp.buttons[1].pressed);
+            const buttonNitro = (gp.buttons[2] && gp.buttons[2].pressed) || (gp.buttons[5] && gp.buttons[5].pressed);
+            const buttonStart = gp.buttons[9] && gp.buttons[9].pressed;
+            const buttonQuit = (gp.buttons[8] && gp.buttons[8].pressed) || (gp.buttons[9] && gp.buttons[9].pressed);
+
+            return {
+                accel: triggerRight,
+                brake: triggerLeft,
+                left: axisX < -0.2 || dpadLeft,
+                right: axisX > 0.2 || dpadRight,
+                nitro: buttonNitro,
+                start: buttonStart || (gp.buttons[0] && gp.buttons[0].pressed),
+                quit: buttonQuit
+            };
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const gpInput = pollGamepad();
+
+            if (!gameActive) {
+                if (gpInput.start) {
+                    if (!document.getElementById('start-screen').classList.contains('hidden')) {
+                        startGame();
+                    }
+                }
+                renderer.render(scene, camera);
+                return;
+            }
+
+            if (gpInput.quit) {
+                quitGame();
+                return;
+            }
+
+            let isAccelerating = keys.up || touchAccel || gpInput.accel;
+            let isBraking = keys.down || touchBrake || gpInput.brake;
+            let isSteeringLeft = keys.left || touchLeft || gpInput.left;
+            let isSteeringRight = keys.right || touchRight || gpInput.right;
+            isNitroActive = (keys.nitro || touchNitro || gpInput.nitro) && nitro > 0;
+
+            let targetMaxSpeed = isNitroActive ? maxSpeed * 1.55 : maxSpeed;
+
+            if (isAccelerating) {
+                speed = Math.min(targetMaxSpeed, speed + acceleration);
+            } else if (isBraking) {
+                speed = Math.max(0, speed - deceleration * 2.2);
+            } else {
+                speed = Math.max(0, speed - deceleration * 0.5);
+            }
+
+            if (isNitroActive) {
+                nitro = Math.max(0, nitro - 0.55);
+            } else {
+                nitro = Math.min(100, nitro + 0.12);
+            }
+            document.getElementById('nitro-bar').style.width = nitro + '%';
+            document.getElementById('nitro-text').innerText = Math.floor(nitro) + '%';
+
+            if (engineGain && audioCtx) {
+                engineGain.gain.setValueAtTime(0.02 + (speed / maxSpeed) * 0.08, audioCtx.currentTime);
+                if (engineOsc) {
+                    engineOsc.frequency.setValueAtTime(50 + speed * 130, audioCtx.currentTime);
+                }
+            }
+
+            distanceTraveled += speed;
+
+            if (isSteeringLeft) targetPlayerX = Math.max(-4.0, targetPlayerX - 0.12);
+            if (isSteeringRight) targetPlayerX = Math.min(4.0, targetPlayerX + 0.12);
+            playerX = THREE.MathUtils.lerp(playerX, targetPlayerX, 0.15);
+
+            if (playerSledMesh) {
+                playerSledMesh.position.x = playerX;
+                playerSledMesh.position.z = -distanceTraveled;
+                playerSledMesh.rotation.y = (targetPlayerX - playerX) * 0.25;
+            }
+
+            camera.position.x = playerX;
+            camera.position.z = -distanceTraveled + 7.5;
+
+            snowParticlesGroup.forEach((snowSystem) => {
+                const positions = snowSystem.geometry.attributes.position.array;
+                for(let i = 1; i < positions.length; i += 3) {
+                    positions[i] -= (0.2 + speed * 0.8);
+                    if (positions[i] < 0) positions[i] = 100;
+                }
+                snowSystem.geometry.attributes.position.needsUpdate = true;
+            });
+
+            // Aggressive Opponents AI
+            for(let i = 0; i < opponents.length; i++) {
+                let opp = opponents[i];
+                let dz = opp.mesh.position.z - playerSledMesh.position.z;
+
+                opp.mesh.position.z += (speed - opp.speed) * 0.45;
+
+                if (Math.abs(dz) < 35) {
+                    if (opp.mesh.position.x < playerX) {
+                        opp.mesh.position.x += 0.045;
+                    } else if (opp.mesh.position.x > playerX) {
+                        opp.mesh.position.x -= 0.045;
+                    }
+                }
+
+                if (Math.abs(dz) < 1.3 && Math.abs(opp.mesh.position.x - playerX) < 1.3) {
+                    speed *= 0.15;
+                    score = Math.max(0, score - 200);
+                    playSoundEffect('crash');
+                    triggerHitEffect();
+                    opp.mesh.position.x += (opp.mesh.position.x > playerX ? 1.5 : -1.5);
+                }
+
+                if (opp.mesh.position.z > camera.position.z + 15) {
+                    opp.mesh.position.z = camera.position.z - 380;
+                    opp.mesh.position.x = (Math.random() - 0.5) * 7.5;
+                }
+            }
+
+            // Obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.mesh.rotation.y += 0.025;
+
+                let dz = obs.mesh.position.z - playerSledMesh.position.z;
+                if (Math.abs(dz) < 1.2) {
+                    if (Math.abs(obs.x - playerX) < 1.2) {
+                        speed *= 0.25;
+                        score = Math.max(0, score - 150);
+                        playSoundEffect('crash');
+                        triggerHitEffect();
+
+                        scene.remove(obs.mesh);
+                        obstacles.splice(i, 1);
+                    }
+                }
+            }
+
+            // Collectibles
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                let col = collectibles[i];
+                if (col.collected) continue;
+                col.mesh.rotation.y += 0.04;
+
+                let dz = col.mesh.position.z - playerSledMesh.position.z;
+                if (Math.abs(dz) < 1.4) {
+                    if (Math.abs(col.x - playerX) < 1.4) {
+                        col.collected = true;
+                        keysCollected++;
+                        score += 350;
+                        playSoundEffect('collect');
+                        scene.remove(col.mesh);
+                        collectibles.splice(i, 1);
+
+                        updateHUDStats();
+                        triggerTipPopup();
+                    }
+                }
+            }
+
+            tipTimer++;
+            if (tipTimer > 450) {
+                tipTimer = 0;
+                currentTipIndex = (currentTipIndex + 1) % cyberTips.length;
+                showCyberTipBanner(cyberTips[currentTipIndex]);
+            }
+
+            document.getElementById('hud-speed').innerText = Math.floor(speed * 135);
+            document.getElementById('hud-score').innerText = score;
+
+            renderer.render(scene, camera);
+        }
+
+        function triggerHitEffect() {
+            const canvas = document.getElementById('webgl-canvas');
+            canvas.style.filter = 'hue-rotate(90deg) contrast(200%)';
+            setTimeout(() => { canvas.style.filter = 'none'; }, 300);
+        }
+
+        function showCyberTipBanner(text) {
+            const banner = document.getElementById('tip-banner');
+            document.getElementById('tip-text').innerText = text;
+            banner.classList.remove('opacity-0', '-translate-y-12');
+            banner.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', '-translate-y-12');
+            }, 4000);
+        }
+
+        function triggerTipPopup() {
+            const randomTip = cyberTips[Math.floor(Math.random() * cyberTips.length)];
+            showCyberTipBanner("Key Acquired! Security Insight: " + randomTip);
+        }
+
+        function updateHUDStats() {
+            document.getElementById('hud-keys').innerText = keysCollected + " / " + totalKeysNeeded;
+        }
+
+        function setupEventListeners() {
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') keys.up = true;
+                if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') keys.down = true;
+                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true;
+                if (e.key === ' ' || e.key === 'Shift') keys.nitro = true;
+                if (e.key.toLowerCase() === 'q' && gameActive) quitGame();
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') keys.up = false;
+                if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') keys.down = false;
+                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false;
+                if (e.key === ' ' || e.key === 'Shift') keys.nitro = false;
+            });
+
+            const bindBtn = (id, setter) => {
+                const el = document.getElementById(id);
+                el.addEventListener('touchstart', (e) => { e.preventDefault(); setter(true); });
+                el.addEventListener('touchend', (e) => { e.preventDefault(); setter(false); });
+                el.addEventListener('mousedown', () => { setter(true); });
+                el.addEventListener('mouseup', () => { setter(false); });
+            };
+
+            bindBtn('btn-accel', (v) => { touchAccel = v; });
+            bindBtn('btn-brake', (v) => { touchBrake = v; });
+            bindBtn('btn-left', (v) => { touchLeft = v; });
+            bindBtn('btn-right', (v) => { touchRight = v; });
+            bindBtn('btn-nitro', (v) => { touchNitro = v; });
+
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('btn-quit').addEventListener('click', quitGame);
+        }
+
+        function setupGamepadListeners() {
+            window.addEventListener("gamepadconnected", (e) => {
+                gamepadConnected = true;
+                document.getElementById('gamepad-badge').classList.remove('hidden');
+            });
+
+            window.addEventListener("gamepaddisconnected", (e) => {
+                gamepadConnected = false;
+                document.getElementById('gamepad-badge').classList.add('hidden');
+            });
+        }
+
+        function startGame() {
+            initAudio();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            
+            score = 0;
+            keysCollected = 0;
+            distanceTraveled = 0;
+            nitro = 100;
+            speed = 0.2;
+            playerX = 0;
+            targetPlayerX = 0;
+            timeRemaining = 30; // 30-Second Timer
+            
+            updateHUDStats();
+            document.getElementById('hud-timer').innerText = "00:30";
+            
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                timeRemaining--;
+                let mins = Math.floor(timeRemaining / 60);
+                let secs = timeRemaining % 60;
+                document.getElementById('hud-timer').innerText = 
+                    (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            gameActive = true;
+            showCyberTipBanner("RACE STARTED! Dodge opponents and collect keys!");
+        }
+
+        function quitGame() {
+            gameActive = false;
+            speed = 0;
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            if (engineGain && audioCtx) {
+                engineGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            }
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function endGame() {
+            gameActive = false;
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            if (engineGain && audioCtx) {
+                engineGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            }
+            
+            // Hide HUD and go directly back to Title Screen
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+
+            // Open official event webpage
+            if (navigator.onLine) {
+                window.open("https://eventsn.cxoforum.com/CXOXchange2026DetroitCyberWinterWonderland#/", "_blank");
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>

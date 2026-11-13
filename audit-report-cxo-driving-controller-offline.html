@@ -1,0 +1,209 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Audit Report — CXO_Driving_Controller_Offline</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6;background:#fff;color:#1f2328;max-width:760px;margin:0 auto;padding:32px 24px 48px}
+  h1{font-size:19px;font-weight:700;margin-bottom:4px}
+  .meta{font-size:12px;color:#57606a;margin-bottom:28px}
+  h2{font-size:13px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#57606a;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+  .issue{border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#f7f8fa}
+  .issue-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .high{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+  .med{background:#fefce8;color:#854d0e;border:1px solid #fde68a}
+  .low{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+  .info{background:#eff6ff;color:#1e40af;border:1px solid #93c5fd}
+  .ok{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+  .title{font-weight:700;font-size:14px}
+  .loc{font-size:11px;color:#57606a;margin-bottom:6px;font-family:monospace}
+  .desc{font-size:13px;color:#1f2328;margin-bottom:6px}
+  code{font-family:"SFMono-Regular",Consolas,monospace;font-size:11.5px;background:#e5e7eb;border-radius:4px;padding:1px 5px;color:#374151}
+  pre{font-family:"SFMono-Regular",Consolas,monospace;font-size:11.5px;background:#1f2328;color:#e5e7eb;border-radius:6px;padding:10px 12px;overflow-x:auto;margin:8px 0;line-height:1.5}
+  .fix{font-size:12.5px;color:#374151;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px;margin-top:6px}
+  .fix strong{color:#166534}
+  .clear{font-size:12.5px;color:#374151;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 12px;margin-top:6px}
+  .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+  .summary-card{border-radius:8px;padding:12px 10px;text-align:center;border:1px solid}
+  .summary-card b{display:block;font-size:22px;font-weight:700;line-height:1.1}
+  .summary-card span{font-size:10.5px;font-weight:700;letter-spacing:.5px}
+  .file-section{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12.5px}
+  .file-section b{font-weight:700;font-family:monospace}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#57606a;text-align:center}
+</style>
+</head>
+<body>
+
+<h1>Audit Report — CXO_Driving_Controller_Offline</h1>
+<p class="meta">Files: index.html (941 lines) · css/fonts.css (10 lines) · css/tailwind-lite.css (168 lines) · three.min.js (603 KB, r128) · fonts/PUT_FONTS_HERE.txt<br />
+Reviewed: 2026-11-13 · Type: offline HTML5 Three.js driving game · No server backend · No user data collected</p>
+
+<div class="summary-grid">
+  <div class="summary-card" style="background:#fef2f2;border-color:#fca5a5"><b style="color:#991b1b">0</b><span style="color:#991b1b">CRITICAL</span></div>
+  <div class="summary-card" style="background:#fff7ed;border-color:#fdba74"><b style="color:#9a3412">3</b><span style="color:#9a3412">HIGH</span></div>
+  <div class="summary-card" style="background:#fefce8;border-color:#fde68a"><b style="color:#854d0e">4</b><span style="color:#854d0e">MEDIUM</span></div>
+  <div class="summary-card" style="background:#f0fdf4;border-color:#86efac"><b style="color:#166534">5</b><span style="color:#166534">LOW</span></div>
+  <div class="summary-card" style="background:#eff6ff;border-color:#93c5fd"><b style="color:#1e40af">3</b><span style="color:#1e40af">INFO</span></div>
+</div>
+
+<div class="file-section">
+  <b>three.min.js</b> — SHA-256: <code>9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2</code><br />
+  Identified as <b>Three.js r128</b> (released 2021). Current stable release is <b>r168+ (2024)</b>. No <code>eval()</code> calls found — the occurrences of "eval" in the file are all <code>.evaluate()</code> method calls on animation interpolant objects. No tampering indicators detected.
+</div>
+
+
+<h2>High</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Unguarded <code>window.open()</code> at game-end navigates to an external URL — tab-napping risk</span></div>
+  <p class="loc">index.html · Lines 930–932 — <code>endGame()</code></p>
+  <p class="desc">When the 30-second timer expires, <code>endGame()</code> calls <code>window.open(url, "_blank")</code>. Because no <code>rel="noopener noreferrer"</code> equivalent is passed, the opened tab receives a reference back to the opener window via <code>window.opener</code>. If the destination URL is ever compromised or redirected to a malicious page, the external page can call <code>window.opener.location = "phishing-page.com"</code> to silently redirect the original game tab. This is especially concerning in a live event kiosk context where the tab is unmonitored.</p>
+  <pre>// line 930–932
+if (navigator.onLine) {
+    window.open("https://eventsn.cxoforum.com/...", "_blank");
+    // ← no noopener passed; opener reference is exposed
+}</pre>
+  <div class="fix"><strong>Fix:</strong> Pass the <code>noopener</code> and <code>noreferrer</code> features: <code>window.open(url, "_blank", "noopener,noreferrer")</code>. This severs the <code>window.opener</code> reference in the new tab.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Outdated Three.js r128 — multiple known CVEs and 3 years behind current</span></div>
+  <p class="loc">three.min.js · Copyright header identifies r128 (2021)</p>
+  <p class="desc">The bundled Three.js is <strong>r128</strong>, released in 2021. The current stable release is r168+ (2024). Three years of security patches, WebGL context-loss handling improvements, and memory-leak fixes are absent. While no specific RCE CVE is known for Three.js itself, the outdated version means the app misses mitigations for shader injection edge cases and may expose deprecated/removed API behaviour. For a kiosk game running on shared hardware at a public event, keeping dependencies current reduces attack surface.</p>
+  <div class="fix"><strong>Fix:</strong> Replace <code>three.min.js</code> with the current release (r168+). Download from <a href="https://threejs.org">threejs.org</a> or via npm (<code>npm pack three</code> and extract the minified build). Test existing geometry and material APIs — most are backward-compatible.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Game timer can be manipulated — <code>setInterval</code> countdown runs in JS, not on a monotonic clock</span></div>
+  <p class="loc">index.html · Lines 891–901 — <code>startGame()</code> timer</p>
+  <p class="desc">The 30-second countdown uses <code>setInterval(..., 1000)</code> which is not reliable — browsers throttle intervals in background tabs, and the interval can drift significantly under CPU load from the Three.js render loop. At a public event kiosk with many simultaneous Three.js operations, players may get 35–40 seconds instead of 30. Additionally, a user who opens DevTools can call <code>clearInterval(gameTimerInterval)</code> to freeze the timer, then <code>endGame()</code> directly to claim a high score without playing.</p>
+  <pre>// lines 891–901
+gameTimerInterval = setInterval(() =&gt; {
+    timeRemaining--;           // decrements once per interval tick
+    // ...
+    if (timeRemaining &lt;= 0) endGame();
+}, 1000);
+// No monotonic start-time check — timer drifts under load</pre>
+  <div class="fix"><strong>Fix:</strong> Record a wall-clock start time: <code>const startTime = Date.now();</code>. In the <code>animate()</code> loop, compute remaining time as <code>Math.max(0, 30000 - (Date.now() - startTime))</code>. This is immune to interval drift and DevTools manipulation of the interval variable.</div>
+</div>
+
+
+<h2>Medium</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Gamepad Start and Quit buttons share the same physical button (index 9) — pressing Start also immediately quits</span></div>
+  <p class="loc">index.html · Lines 627–628 — <code>pollGamepad()</code></p>
+  <p class="desc"><code>buttonStart</code> is mapped to <code>gp.buttons[9]</code> (the standard Start/Options button on most gamepads). <code>buttonQuit</code> is mapped to <code>gp.buttons[8] || gp.buttons[9]</code>. This means pressing Start to begin the game simultaneously sets <code>gpInput.quit = true</code> in the same frame. In <code>animate()</code>, <code>gpInput.quit</code> is checked before the game state fully transitions, which causes the game to start and immediately call <code>quitGame()</code> in some timing windows.</p>
+  <pre>// lines 627–628
+const buttonStart = gp.buttons[9] &amp;&amp; gp.buttons[9].pressed;
+const buttonQuit  = (gp.buttons[8] &amp;&amp; gp.buttons[8].pressed)
+                 || (gp.buttons[9] &amp;&amp; gp.buttons[9].pressed);  // ← same button!</pre>
+  <div class="fix"><strong>Fix:</strong> Remove <code>gp.buttons[9]</code> from the quit mapping. Use only <code>gp.buttons[8]</code> (Select/Back) for quit, keeping Start (9) exclusively for starting the game: <code>const buttonQuit = gp.buttons[8] &amp;&amp; gp.buttons[8].pressed;</code></div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Three.js geometry and materials are never disposed — progressive VRAM leak on replay</span></div>
+  <p class="loc">index.html · Lines 561–598 — <code>spawnOpponents()</code>, <code>spawnObstacle()</code>, <code>spawnCollectible()</code></p>
+  <p class="desc">Every time an obstacle or collectible is removed via <code>scene.remove(obs.mesh)</code>, the underlying <code>BufferGeometry</code> and <code>Material</code> objects are not disposed. Each collected key or hit obstacle leaks GPU memory. Opponents are also fully rebuilt on each <code>spawnOpponents()</code> call (which is only called once at startup — but if the game is restarted without a page reload, old meshes accumulate). On a kiosk running for hours with hundreds of game rounds, this will cause the browser to crash or stutter due to VRAM exhaustion.</p>
+  <pre>// line 758–759 (obstacle removal — no dispose)
+scene.remove(obs.mesh);
+obstacles.splice(i, 1);
+// obs.mesh.geometry.dispose() and obs.mesh.material.dispose() are missing</pre>
+  <div class="fix"><strong>Fix:</strong> Before every <code>scene.remove(mesh)</code>, call <code>mesh.traverse(child =&gt; { if (child.isMesh) { child.geometry.dispose(); if (Array.isArray(child.material)) child.material.forEach(m =&gt; m.dispose()); else child.material.dispose(); } });</code>. Also dispose billboard <code>CanvasTexture</code> objects.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Score can go negative — <code>Math.max(0, score - N)</code> not applied consistently</span></div>
+  <p class="loc">index.html · Lines 732–733 and 753–754</p>
+  <p class="desc">Both collision handlers (opponent and obstacle) correctly clamp the score with <code>Math.max(0, score - N)</code> in the lines shown. However, the <em>displayed</em> score in the HUD (<code>document.getElementById('hud-score').innerText = score</code> on line 794) reads the raw <code>score</code> variable directly. If a collision fires in the same frame as a previous clamping, the displayed value is correct. But there is a secondary issue: on the <em>next</em> frame the clamped value is now stored in <code>score</code> so the display will be correct — but this double-check can display "−0" briefly in edge cases. More importantly, the clamping is applied only in those two paths; a future addition of a time penalty would need to remember to also clamp.</p>
+  <div class="fix"><strong>Fix:</strong> Centralise score mutation through a helper: <code>function addScore(delta) { score = Math.max(0, score + delta); }</code>. Replace all direct <code>score +=</code> and <code>score -=</code> sites with this function.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Missing font files cause layout degradation silently — no fallback notification</span></div>
+  <p class="loc">css/fonts.css · Lines 3–10 · fonts/PUT_FONTS_HERE.txt</p>
+  <p class="desc">The game requires <code>Orbitron.woff2</code>, <code>Rajdhani-Medium.woff2</code>, <code>Rajdhani-SemiBold.woff2</code>, and <code>Rajdhani-Bold.woff2</code> in the <code>fonts/</code> directory. These files are absent from the distributed package. Without them, the browser silently falls back to system fonts. On Windows machines at the event (likely the kiosk platform), the fallback chain (<code>Bahnschrift → Eurostile → Segoe UI</code>) produces noticeably different letter-spacing and sizing for all Orbitron-sized headings, potentially overflowing the fixed-pixel HUD boxes (especially the "VIBE BREAKER" title area and score counters).</p>
+  <div class="fix"><strong>Fix:</strong> Bundle the four <code>.woff2</code> files with the project before the event. All four fonts are free under OFL and available from <a href="https://fonts.google.com">fonts.google.com</a>. Run a visual check at 1080p and 4K on the actual kiosk hardware.</div>
+</div>
+
+
+<h2>Low</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title"><code>requestAnimationFrame</code> loop runs at full speed even on the start screen — unnecessary GPU load</span></div>
+  <p class="loc">index.html · Lines 641–654 — <code>animate()</code></p>
+  <p class="desc">The <code>animate()</code> function calls <code>requestAnimationFrame(animate)</code> unconditionally at the top, then renders the full Three.js scene even when the game is not active (<code>!gameActive</code>). On the start screen at 60/120 fps, the GPU renders the full snowy city at full resolution continuously — consuming significant power and generating heat on a kiosk machine that may need to run for 8+ hours. The idle scene has no motion other than the render, so a reduced idle frame rate would be imperceptible.</p>
+  <div class="fix"><strong>Fix:</strong> On the start screen, render at a throttled rate: replace <code>requestAnimationFrame(animate)</code> with <code>setTimeout(() =&gt; requestAnimationFrame(animate), !gameActive ? 100 : 0)</code> for a ~10 fps idle rate.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">AudioContext is never closed — leaked audio node when page is reloaded or hidden</span></div>
+  <p class="loc">index.html · Lines 225–248 — <code>initAudio()</code></p>
+  <p class="desc">The <code>AudioContext</code> (<code>audioCtx</code>) and its connected oscillator are created in <code>initAudio()</code> but never closed on <code>quitGame()</code> or <code>endGame()</code>. The engine oscillator continues running (at zero gain) between games. Each browser tab is limited to a small number of <code>AudioContext</code> instances; on browsers with strict limits (Safari iOS) this will prevent audio from working in later sessions. The oscillator also cannot be garbage-collected while still connected to a running context.</p>
+  <div class="fix"><strong>Fix:</strong> In both <code>quitGame()</code> and <code>endGame()</code>, stop the oscillator and suspend the context: <code>engineOsc.stop(); audioCtx.suspend();</code>. On the next game start, resume it: <code>audioCtx.resume();</code>. No need to fully close and recreate the context.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">Touch controls do not handle <code>mouseleave</code> — button stays "held" if cursor leaves the element</span></div>
+  <p class="loc">index.html · Lines 843–855 — <code>bindBtn()</code></p>
+  <p class="desc"><code>bindBtn()</code> listens for <code>mousedown</code> (set true) and <code>mouseup</code> (set false). If the user clicks and drags the mouse off a button, the <code>mouseup</code> fires on the document rather than the button, so the setter is never called with <code>false</code>. The accelerate, brake, left, right, or nitro state remains locked <em>on</em> indefinitely until the button is clicked again. This is particularly noticeable with the ACCEL button in desktop/kiosk mouse mode.</p>
+  <div class="fix"><strong>Fix:</strong> Add a <code>mouseleave</code> listener that resets the state: <code>el.addEventListener('mouseleave', () =&gt; { setter(false); });</code></div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">Obstacle collision uses stored <code>obs.x</code> (spawn position) rather than live mesh position — stale collision</span></div>
+  <p class="loc">index.html · Lines 751–752 — obstacle collision check</p>
+  <p class="desc">The collision check for obstacles uses <code>obs.x</code> (the value set at spawn time) rather than <code>obs.mesh.position.x</code>. Since obstacles do not move laterally, these are equivalent today. However, if a future update adds obstacle drift or knockback, the collision will silently stop working. The opponent collision already correctly uses <code>opp.mesh.position.x</code> (line 731), creating an inconsistency.</p>
+  <pre>// line 752 — uses stale spawn x
+if (Math.abs(obs.x - playerX) &lt; 1.2) { ... }
+// should be:
+if (Math.abs(obs.mesh.position.x - playerX) &lt; 1.2) { ... }</pre>
+  <div class="fix"><strong>Fix:</strong> Replace <code>obs.x</code> with <code>obs.mesh.position.x</code> in the collision check for consistency and future-proofing.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">No <code>viewport</code> meta prevents pinch-zoom on mobile/tablet touch screens</span></div>
+  <p class="loc">index.html · Line 5</p>
+  <p class="desc">The viewport meta tag is present but uses only <code>width=device-width, initial-scale=1.0</code>. It does not set <code>user-scalable=no</code> or <code>maximum-scale=1</code>. At a public event kiosk on a touchscreen, participants can accidentally pinch-zoom the entire game interface, breaking the HUD layout and making it unrecoverable without a page reload.</p>
+  <div class="fix"><strong>Fix:</strong> Add <code>user-scalable=no, maximum-scale=1.0</code> to the viewport meta: <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"&gt;</code></div>
+</div>
+
+
+<h2>Informational</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">No <code>&lt;meta name="referrer"&gt;</code> — full URL sent to event website on redirect</span></div>
+  <p class="loc">index.html · Line 931</p>
+  <p class="desc">When <code>window.open()</code> fires at game end, the browser sends a <code>Referer</code> header containing the local file path (<code>file:///Users/.../index.html</code> or the kiosk's serving origin) to the destination server. This leaks the local file system path in server logs. For a local file served from a USB drive, this may expose internal directory structure.</p>
+  <div class="fix"><strong>Note:</strong> Pass <code>"noopener,noreferrer"</code> as the third argument to <code>window.open()</code> (already recommended under the High finding above) — <code>noreferrer</code> also suppresses the Referer header.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">Snow particle system mutates <code>Float32Array</code> every frame — moderate GC pressure</span></div>
+  <p class="loc">index.html · Lines 707–714 — snow animation in <code>animate()</code></p>
+  <p class="desc">Every frame, all 6 000 snow particle Y-positions (2 layers × 3 000) are iterated and mutated in place via direct array access, then <code>needsUpdate = true</code> re-uploads the buffer to the GPU. This is the correct pattern for dynamic particles. No allocation occurs per frame, so garbage collection is not a concern here. The comment is for awareness: at 120 fps on a high-refresh kiosk display, this is 720 000 float writes per second — acceptable but worth noting if performance degrades.</p>
+  <div class="fix"><strong>Note:</strong> No change needed. If frame rate drops become noticeable, reduce <code>snowCount</code> from 3 000 to 1 500 per layer, or move snow to a vertex shader.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">Three.js r128 is vendored with no integrity verification or version pinning</span></div>
+  <p class="loc">three.min.js · index.html line 7</p>
+  <p class="desc">The library is loaded as a local file with no Subresource Integrity (<code>integrity</code> attribute) on the <code>&lt;script&gt;</code> tag. For a file served locally this is acceptable (SRI is for CDN-loaded resources), but it means there is no automated detection if the file is replaced or corrupted on the distribution USB drive. The SHA-256 of the current file is recorded in this report for reference.</p>
+  <div class="fix"><strong>Note:</strong> Record the SHA-256 hash (<code>9274bbce…</code>) in a <code>CHECKSUM.txt</code> alongside the files, and verify it on each deployment: <code>shasum -a 256 three.min.js</code>.</div>
+</div>
+
+<h2>Positive Findings</h2>
+<div class="issue" style="background:#f0fdf4;border-color:#86efac">
+  <p class="desc" style="color:#166534"><strong>✓ No user data collected or stored</strong> — the game has no forms, no localStorage writes, no cookies, and no network requests (except the final <code>window.open</code>). Attack surface is minimal.</p>
+  <p class="desc" style="color:#166534;margin-top:6px"><strong>✓ No innerHTML with user-controlled data</strong> — all DOM updates use <code>.innerText</code>, preventing XSS via display values.</p>
+  <p class="desc" style="color:#166534;margin-top:6px"><strong>✓ Offline-first architecture</strong> — the game runs fully offline except for the end-of-game URL open, which is correctly guarded by <code>navigator.onLine</code>.</p>
+  <p class="desc" style="color:#166534;margin-top:6px"><strong>✓ No <code>eval()</code> calls</strong> — the "eval" occurrences in <code>three.min.js</code> are all <code>.evaluate()</code> animation interpolant methods, not code execution.</p>
+  <p class="desc" style="color:#166534;margin-top:6px"><strong>✓ Touch event <code>preventDefault()</code> applied</strong> — touch buttons correctly call <code>e.preventDefault()</code> to block scroll interference during gameplay.</p>
+</div>
+
+<footer>Made with IBM Bob</footer>
+</body>
+</html>

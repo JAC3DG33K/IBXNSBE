@@ -1,0 +1,10 @@
+/* Offline fonts. Drop the .woff2 files below into ../fonts/ for the exact original look.
+   If they are missing, the game falls back to the system fonts listed in the stacks below. */
+@font-face{font-family:'Orbitron';font-weight:400 900;font-style:normal;font-display:swap;
+  src:local('Orbitron'),url('../fonts/Orbitron.woff2') format('woff2')}
+@font-face{font-family:'Rajdhani';font-weight:500;font-style:normal;font-display:swap;
+  src:local('Rajdhani Medium'),local('Rajdhani-Medium'),url('../fonts/Rajdhani-Medium.woff2') format('woff2')}
+@font-face{font-family:'Rajdhani';font-weight:600;font-style:normal;font-display:swap;
+  src:local('Rajdhani SemiBold'),local('Rajdhani-SemiBold'),url('../fonts/Rajdhani-SemiBold.woff2') format('woff2')}
+@font-face{font-family:'Rajdhani';font-weight:700;font-style:normal;font-display:swap;
+  src:local('Rajdhani Bold'),local('Rajdhani-Bold'),url('../fonts/Rajdhani-Bold.woff2') format('woff2')}

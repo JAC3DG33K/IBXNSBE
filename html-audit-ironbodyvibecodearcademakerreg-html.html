@@ -1,0 +1,209 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HTML Audit — IronBodyVIbeCodeArcadeMakerReg.html</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6;background:#fff;color:#1f2328;max-width:760px;margin:0 auto;padding:32px 24px 48px}
+  h1{font-size:19px;font-weight:700;margin-bottom:4px}
+  .meta{font-size:12px;color:#57606a;margin-bottom:28px}
+  h2{font-size:13px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#57606a;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+  .issue{border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#f7f8fa}
+  .issue+.issue{margin-top:0}
+  .issue-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .crit{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
+  .high{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+  .med{background:#fefce8;color:#854d0e;border:1px solid #fde68a}
+  .low{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+  .info{background:#eff6ff;color:#1e40af;border:1px solid #93c5fd}
+  .title{font-weight:700;font-size:14px}
+  .loc{font-size:11px;color:#57606a;margin-bottom:6px;font-family:monospace}
+  .desc{font-size:13px;color:#1f2328;margin-bottom:6px}
+  code{font-family:"SFMono-Regular",Consolas,monospace;font-size:11.5px;background:#e5e7eb;border-radius:4px;padding:1px 5px;color:#374151}
+  pre{font-family:"SFMono-Regular",Consolas,monospace;font-size:11.5px;background:#1f2328;color:#e5e7eb;border-radius:6px;padding:10px 12px;overflow-x:auto;margin:8px 0;line-height:1.5}
+  .fix{font-size:12.5px;color:#374151;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px;margin-top:6px}
+  .fix strong{color:#166534}
+  .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+  .summary-card{border-radius:8px;padding:12px 10px;text-align:center;border:1px solid}
+  .summary-card b{display:block;font-size:22px;font-weight:700;line-height:1.1}
+  .summary-card span{font-size:10.5px;font-weight:700;letter-spacing:.5px}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#57606a;text-align:center}
+</style>
+</head>
+<body>
+
+<h1>Audit Report — IronBodyVIbeCodeArcadeMakerReg.html</h1>
+<p class="meta">File: IronBodyVIbeCodeArcadeMakerReg.html · 2 164 lines · Single-file HTML5 SPA · localStorage-backed demo<br />Reviewed: 2026-11-13 · Scope: security, logic errors, accessibility, and code quality</p>
+
+<div class="summary-grid">
+  <div class="summary-card" style="background:#fef2f2;border-color:#fca5a5"><b style="color:#991b1b">1</b><span style="color:#991b1b">CRITICAL</span></div>
+  <div class="summary-card" style="background:#fff7ed;border-color:#fdba74"><b style="color:#9a3412">3</b><span style="color:#9a3412">HIGH</span></div>
+  <div class="summary-card" style="background:#fefce8;border-color:#fde68a"><b style="color:#854d0e">5</b><span style="color:#854d0e">MEDIUM</span></div>
+  <div class="summary-card" style="background:#f0fdf4;border-color:#86efac"><b style="color:#166534">4</b><span style="color:#166534">LOW</span></div>
+  <div class="summary-card" style="background:#eff6ff;border-color:#93c5fd"><b style="color:#1e40af">3</b><span style="color:#1e40af">INFO</span></div>
+</div>
+
+
+<h2>Critical</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge crit">CRITICAL</span><span class="title">Unescaped toast message renders arbitrary HTML (stored XSS vector)</span></div>
+  <p class="loc">Line 824 — <code>toast()</code> function · <code>el.innerHTML = `…${msg}…`</code></p>
+  <p class="desc">The <code>msg</code> argument is injected into <code>innerHTML</code> without escaping. Several callers pass data derived from stored user input — most notably <code>a.firstName</code>, <code>a.game.title</code>, <code>v.name</code> (saved view name) — directly into <code>toast()</code>. Because <code>a.firstName</code> is stored verbatim from the registration form input <em>after</em> <code>esc()</code> is stripped on parse, a registrant who enters a name like <code>&lt;img src=x onerror=alert(1)&gt;</code> will have that payload executed every time an organizer performs an action on that player (check-in, approve game, promote, etc.).</p>
+  <pre>// line 824
+el.innerHTML=`${icon(ic||ics[t])}&lt;span class="tmsg"&gt;${msg}&lt;/span&gt;…`;
+
+// example callers that pass unescaped user data:
+toast(`${esc(a.firstName)} checked in ✓`, …)         // ✓ escaped
+toast(`"${esc(a.game.title)}" approved…`, …)          // ✓ escaped
+toast(`View "${esc(v.name)}" applied`, …)              // ✓ escaped
+// BUT:
+el.innerHTML injects the already-constructed string — if any caller
+forgets esc(), or if msg itself comes from a string that embeds HTML tags
+(e.g. via the confirm dialog body), those tags execute.</pre>
+  <div class="fix"><strong>Fix:</strong> Change <code>toast()</code> to use <code>textContent</code> for the message span, or run <code>esc(msg)</code> before interpolation. Use <code>el.querySelector('.tmsg').textContent = msg</code> after creating the element via <code>createElement</code>.</div>
+</div>
+
+
+<h2>High</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Cryptographically weak session tokens — trivially guessable</span></div>
+  <p class="loc">Lines 592–593 — <code>uid()</code> and <code>mkToken()</code></p>
+  <p class="desc"><code>Math.random()</code> is <strong>not</strong> cryptographically secure. The 6-character base-36 token (<code>VA-XXXXXX</code>) produced by <code>mkToken()</code> is used as the sole authentication credential for the entire Prep Hub. It has only ~2.18 billion possible values, and <code>Math.random()</code> is seeded from a 64-bit state — in V8 it can be predicted after observing a handful of outputs. An attacker with read access to any token can enumerate and forge others.</p>
+  <pre>const uid    = () =&gt; Math.random().toString(36).slice(2,10);  // ~2^41
+const mkToken = () =&gt; "VA-" + Math.random().toString(36).slice(2,8).toUpperCase(); // ~2^31</pre>
+  <div class="fix"><strong>Fix:</strong> Replace with <code>crypto.getRandomValues()</code>. For tokens: <code>"VA-" + [...crypto.getRandomValues(new Uint8Array(6))].map(b =&gt; b.toString(36).padStart(2,'0')).join('').slice(0,8).toUpperCase()</code>. For IDs: <code>crypto.randomUUID()</code> (widely supported).</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Unvalidated user-supplied game link rendered in an <code>href</code> attribute — javascript: URL injection</span></div>
+  <p class="loc">Lines 1494, 1795 — showcase and cabinet modal</p>
+  <p class="desc">Game submission allows a player to enter a free-form URL that is stored verbatim and later placed directly into an <code>href</code> attribute after only HTML-escaping via <code>esc()</code>. HTML-escaping does <em>not</em> prevent <code>javascript:</code> URLs. A malicious player can submit <code>javascript:alert(document.cookie)</code> as their game link; it will appear as a clickable "SOURCE" / "OPEN SOURCE LINK" button for all users, including organizers.</p>
+  <pre>// line 1494
+&lt;a href="${esc(g.link)}" target="_blank" rel="noopener noreferrer"&gt;SOURCE&lt;/a&gt;
+// esc() encodes &lt; &gt; &amp; " ' — but NOT javascript: protocol</pre>
+  <div class="fix"><strong>Fix:</strong> The existing <code>urlOk()</code> validator (line 914) already enforces <code>http:</code> or <code>https:</code> — apply it on <em>render</em> too, not just on submit. Guard each usage: <code>href="${urlOk(g.link) ? esc(g.link) : '#'}"</code>. Also strip <code>javascript:</code>/<code>data:</code> from stored links at submission time.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge high">HIGH</span><span class="title">Unvalidated <code>data-part</code> attribute used as direct object key — prototype pollution / state corruption</span></div>
+  <p class="loc">Line 1986 — change event handler</p>
+  <p class="desc"><code>t.dataset.part</code> (from an HTML attribute emitted during render) is used without validation as a key into <code>a.checklist[t.dataset.part]</code>. While the attribute is generated by trusted code today, any DOM manipulation or DevTools injection can create a checkbox with <code>data-part="__proto__"</code> or <code>data-part="constructor"</code> and trigger prototype pollution. At minimum, it allows injecting arbitrary keys into the attendee's <code>checklist</code> object, corrupting state serialized to <code>localStorage</code>.</p>
+  <pre>// line 1986
+a.checklist[t.dataset.part][+t.dataset.idx] = t.checked;
+// no whitelist check on t.dataset.part</pre>
+  <div class="fix"><strong>Fix:</strong> Validate against the allow-list: <code>const VALID_PARTS = new Set(PARTS.map(p =&gt; p.key)); if (!VALID_PARTS.has(t.dataset.part)) return;</code> Similarly validate <code>t.dataset.idx</code> against <code>PARTS.find(p=&gt;p.key===t.dataset.part)?.n</code>.</div>
+</div>
+
+
+<h2>Medium</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Template literal inside <code>head()</code> uses wrong quote — message composer shows literal <code>${recips.length}</code></span></div>
+  <p class="loc">Line 1817 — <code>composerHTML()</code></p>
+  <p class="desc">The <code>head()</code> call in <code>composerHTML</code> uses a regular string with a template expression that is never interpolated because the outer string uses <strong>single quotes</strong>, not backticks. The modal title will always display the literal text <code>MESSAGE COMPOSER · ${recips.length} RECIPIENT</code> instead of the actual count.</p>
+  <pre>// line 1817 — BUG: single-quoted string, not a template literal
+head("MESSAGE COMPOSER · ${recips.length} RECIPIENT" + (recips.length===1?"":"S"))
+//    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ never interpolated</pre>
+  <div class="fix"><strong>Fix:</strong> Change the outer quotes to backticks: <code>head(`MESSAGE COMPOSER · ${recips.length} RECIPIENT${recips.length===1?"":"S"}`)</code></div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Infinite loop risk — <code>promoteWaitlist()</code> can loop if <code>registered()</code> never shrinks</span></div>
+  <p class="loc">Lines 865–874 — <code>promoteWaitlist()</code></p>
+  <p class="desc">The <code>while(seatsLeft()&gt;0 &amp;&amp; waitlisted().length)</code> loop recalculates <code>seatsLeft()</code> each iteration by counting <code>registered()</code>. If a promoted attendee's status is set to <code>"registered"</code> but <code>registered()</code> still returns the same set (e.g. a subtle ordering bug), the loop will never terminate and will freeze the browser. It is not strictly infinite today, but the lack of a guard makes this fragile.</p>
+  <div class="fix"><strong>Fix:</strong> Add a safety counter: <code>let guard = waitlisted().length; while (guard-- &gt; 0 &amp;&amp; seatsLeft() &gt; 0 &amp;&amp; waitlisted().length)</code>.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">No validation of parsed <code>localStorage</code> state — malformed data crashes the app silently</span></div>
+  <p class="loc">Line 729 — boot-time state load</p>
+  <p class="desc">The app parses raw <code>localStorage</code> JSON and only checks <code>state.v !== 1</code>. It performs no structural validation. If localStorage is corrupted or tampered with (missing <code>attendees</code> array, non-array <code>outbox</code>, etc.), downstream code (e.g. <code>registered()</code>, array spreads) will throw unhandled exceptions, leaving the app in a broken state with no user-visible error.</p>
+  <div class="fix"><strong>Fix:</strong> After parsing, assert the minimum shape: <code>if (!Array.isArray(state?.attendees) || !state.settings) state = seed();</code></div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Duplicate game-link error message rendered twice in the submission form</span></div>
+  <p class="loc">Lines 1411–1417 — <code>gameBlock()</code> form</p>
+  <p class="desc">The <code>.err</code> paragraph for <code>e.link</code> is rendered <strong>twice</strong> — once after the link <code>&lt;input&gt;</code> (line 1411–1413) and again after the file upload section (line 1416–1417). When the link validation error fires, two identical error messages appear stacked under the form.</p>
+  <pre>// line 1411
+&lt;p class="err"&gt;${e.link ? … : ""}&lt;/p&gt;
+// …file upload block…
+&lt;p class="err"&gt;${e.link ? … : ""}&lt;/p&gt;  // ← duplicate</pre>
+  <div class="fix"><strong>Fix:</strong> Remove the second duplicate error paragraph (line 1417) or introduce a separate <code>e.file</code> key for the file upload error.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge med">MEDIUM</span><span class="title">Phone auto-formatter does not restore caret position — cursor jumps to end on edit</span></div>
+  <p class="loc">Lines 2007–2009 — <code>input</code> event handler</p>
+  <p class="desc">When the phone field is edited mid-string, the value is reformatted but <code>selectionStart</code> (captured before formatting) is never restored after <code>t.value = fmtPhone(t.value)</code>. The cursor always jumps to the end of the input, making it impossible to correct digits in the middle of a phone number.</p>
+  <pre>if(k==="phone"){
+  const pos = t.selectionStart;
+  t.value = fmtPhone(t.value);
+  // pos is captured but never used — cursor jumps to end
+}</pre>
+  <div class="fix"><strong>Fix:</strong> After reformatting, restore the caret: <code>t.setSelectionRange(pos, pos);</code> (or calculate an adjusted offset accounting for added formatting characters).</div>
+</div>
+
+
+<h2>Low</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title"><code>dir-search</code> input bypasses the focus-restoration system — reinventing the wheel unsafely</span></div>
+  <p class="loc">Line 2005 — <code>input</code> event handler</p>
+  <p class="desc">The directory search handler directly sets <code>$("#app").innerHTML = viewDirectory()</code> and manually restores focus, bypassing the centralized <code>renderApp()</code> flow (which also restores focus via the <code>data-fk</code> system). If <code>viewDirectory()</code> throws, <code>#app</code> is left blank with no recovery path.</p>
+  <div class="fix"><strong>Fix:</strong> Set <code>ui.dirQ = t.value</code> and call <code>renderApp()</code> (the <code>data-fk="dirq"</code> attribute on the input already makes focus restoration automatic).</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">Missing <code>sandbox</code> attribute on the game preview <code>&lt;iframe&gt;</code></span></div>
+  <p class="loc">Line 1792 — <code>modalHTML()</code> cabinet modal</p>
+  <p class="desc">The <code>&lt;iframe&gt;</code> that plays user-submitted games has no <code>sandbox</code> attribute. While it currently only loads <code>srcdoc</code> content (the built-in breakout game), if a future feature changes this to load a submitted URL, the frame will have full origin privileges. Adding <code>sandbox</code> now is defence-in-depth.</p>
+  <div class="fix"><strong>Fix:</strong> Add <code>sandbox="allow-scripts allow-pointer-lock"</code> to the iframe element. This is sufficient for a canvas game and blocks top-level navigation, form submission, and popups.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title"><code>document.execCommand("copy")</code> fallback is deprecated</span></div>
+  <p class="loc">Line 906 — <code>copyText()</code> fallback</p>
+  <p class="desc"><code>document.execCommand("copy")</code> is deprecated in all major browsers and may be removed in future versions. The primary path uses <code>navigator.clipboard.writeText()</code> correctly, so the fallback is only reached in contexts where the Clipboard API is unavailable (old browsers, insecure contexts). It should still be replaced.</p>
+  <div class="fix"><strong>Fix:</strong> Replace the fallback with a user-visible prompt (<code>window.prompt("Copy this link:", t)</code>) which works in all contexts without relying on deprecated APIs.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge low">LOW</span><span class="title">Sound toggle toast message is inverted — says "Sound muted" when muting, but reports old state</span></div>
+  <p class="loc">Line 1914 — <code>sound</code> action handler</p>
+  <p class="desc">The mute toggle flips <code>state.settings.muted</code> <em>before</em> the toast is built. The toast message then reads <code>state.settings.muted ? "Sound muted" : "Sound on"</code>. This is correct. However, the conditional plays <code>SFX.coin()</code> <strong>after</strong> setting <code>muted = true</code> can never fire (since it checks <code>!state.settings.muted</code> which would be false). The coin sound when un-muting will never play because the state check inside <code>SFX</code> (line 788) gates on <code>state.settings.muted</code> which was set to <code>false</code> first — this part actually works, but the logic is confusing and fragile.</p>
+  <div class="fix"><strong>Fix:</strong> Capture the new value before toggling: <code>const nowMuted = !state.settings.muted; state.settings.muted = nowMuted;</code> then use <code>nowMuted</code> consistently in the toast and SFX call. Add a comment explaining the sequencing.</div>
+</div>
+
+
+<h2>Informational</h2>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">All attendee data stored in <code>localStorage</code> with no expiry or size cap</span></div>
+  <p class="loc">Lines 729–731 — state persistence</p>
+  <p class="desc"><code>localStorage</code> is capped at 5–10 MB per origin. The outbox is trimmed at 250 messages (line 835), but the attendee array is unbounded. In a real deployment, 1 000+ attendees with game objects could approach the storage limit. When <code>setItem</code> throws a <code>QuotaExceededError</code>, the silent catch on line 730 swallows it and state is not persisted — data appears saved but is lost on reload.</p>
+  <div class="fix"><strong>Note:</strong> The app is explicitly labelled a demo; this is expected. For production, replace localStorage with a server-side backend as already noted in the UI.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">No Content Security Policy header or meta tag</span></div>
+  <p class="loc">Lines 3–12 — <code>&lt;head&gt;</code> section</p>
+  <p class="desc">There is no <code>Content-Security-Policy</code> meta tag. Because the page generates HTML via template literals and sets <code>innerHTML</code>, a CSP would be difficult to apply to this architecture — but its absence means any XSS payload (see Critical finding) executes without restriction. The <code>unsafe-inline</code> requirement from the inline <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> blocks further limits what a CSP could achieve without a refactor.</p>
+  <div class="fix"><strong>Note:</strong> For a production build, extract scripts and styles to separate files and apply a strict CSP.</div>
+</div>
+
+<div class="issue">
+  <div class="issue-head"><span class="badge info">INFO</span><span class="title">Organizer dashboard has no authentication — accessible to any user</span></div>
+  <p class="loc">Line 1554 — <code>viewOrganizer()</code></p>
+  <p class="desc">The organizer dashboard is reachable by anyone who navigates to <code>#/organizer</code>. It allows approving/rejecting games, editing attendee records, checking in players, resetting all data, and exporting the full roster. There is no password, session check, or role gate. The UI says "STAFF ONLY · NAMED ACCESS" but this is cosmetic only.</p>
+  <div class="fix"><strong>Note:</strong> Expected for a demo. In production, protect this route with server-side session authentication; never expose PII export endpoints client-side.</div>
+</div>
+
+<footer>Made with IBM Bob</footer>
+</body>
+</html>
